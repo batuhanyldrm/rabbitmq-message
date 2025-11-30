@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  api:
+    build: ./api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - rabbitmq
+
+  payment:
+    build: ./consumers/payment
+    depends_on:
+      - rabbitmq
+
+  shipping:
+    build: ./consumers/shipping
+    depends_on:
+      - rabbitmq

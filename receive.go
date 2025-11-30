@@ -1,12 +1,6 @@
 package main
 
-import (
-	"log"
-
-	amqp "github.com/rabbitmq/amqp091-go"
-)
-
-func Receive() {
+/* func Receive() {
 
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
@@ -48,3 +42,4 @@ func Receive() {
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
 	<-forever
 }
+*/

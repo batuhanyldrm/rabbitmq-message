@@ -1,14 +1,6 @@
 package main
 
-import (
-	"context"
-	"log"
-	"time"
-
-	amqp "github.com/rabbitmq/amqp091-go"
-)
-
-func Send() {
+/* func Send() {
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -43,3 +35,4 @@ func Send() {
 	failOnError(err, "Failed to publish a message")
 	log.Printf(" [x] Sent %s\n", body)
 }
+*/
