@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/rabbitmq/amqp091-go"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type OrderMessage struct {
@@ -18,25 +18,34 @@ type OrderMessage struct {
 func main() {
 	app := fiber.New()
 
-	// RabbitMQ Bağlantısı
-	conn, err := amqp091.Dial("amqp://guest:guest@rabbitmq:5672/")
+	// RabbitMQ bağlantısı
+	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
 	if err != nil {
-		log.Fatal("RabbitMQ bağlantısı olmadı:", err)
+		log.Fatalf("RabbitMQ bağlantısı başarısız: %v", err)
 	}
-	ch, _ := conn.Channel()
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	if err != nil {
+		log.Fatalf("Channel açma hatası: %v", err)
+	}
+	defer ch.Close()
 
 	// Exchange oluştur
-	ch.ExchangeDeclare(
+	err = ch.ExchangeDeclare(
 		"order_exchange",
 		"topic",
-		true,
-		false,
-		false,
-		false,
-		nil,
+		true,  // durable
+		false, // auto-delete
+		false, // internal
+		false, // no-wait
+		nil,   // args
 	)
+	if err != nil {
+		log.Fatalf("ExchangeDeclare hatası: %v", err)
+	}
 
-	// POST /publish
+	// POST /publish/:key
 	app.Post("/publish/:key", func(c *fiber.Ctx) error {
 		routingKey := c.Params("key")
 
@@ -46,21 +55,23 @@ func main() {
 			CreatedAt: time.Now().Format(time.RFC3339),
 		}
 
-		body, _ := json.Marshal(msg)
+		body, err := json.Marshal(msg)
+		if err != nil {
+			return c.Status(500).SendString("JSON oluşturulamadı")
+		}
 
-		err := ch.Publish(
+		err = ch.Publish(
 			"order_exchange",
 			routingKey,
 			false,
 			false,
-			amqp091.Publishing{
+			amqp.Publishing{
 				ContentType: "application/json",
 				Body:        body,
 			},
 		)
-
 		if err != nil {
-			return c.Status(500).SendString("Mesaj gönderilemedi!")
+			return c.Status(500).SendString("Mesaj gönderilemedi: " + err.Error())
 		}
 
 		return c.JSON(fiber.Map{
@@ -70,5 +81,6 @@ func main() {
 		})
 	})
 
+	log.Println("API listening on :8080")
 	app.Listen(":8080")
 }
