@@ -40,7 +40,7 @@ func main() {
 	}
 
 	// Mesajları dinle
-	msgs, err := ch.Consume(q.Name, "", true, false, false, false, nil)
+	msgs, err := ch.Consume(q.Name, "", false, false, false, false, nil)
 	if err != nil {
 		log.Fatalf("Consume hatası: %v", err)
 	}
@@ -49,5 +49,8 @@ func main() {
 
 	for msg := range msgs {
 		log.Println("[SHIPPING]", string(msg.Body))
+
+		// Manuel ACK eğer yapmak istemezsen aşağıdaki kodu sil consume içindeki ilk false ı true yap
+		msg.Ack(false)
 	}
 }
